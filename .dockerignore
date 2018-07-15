@@ -1,0 +1,4 @@
+# disable iso files, directory is mounted
+iso/*
+# target files are created by the container
+target/*
