@@ -8,6 +8,7 @@ RUN yum -y install \
 
 WORKDIR /work
 COPY ./work/* ./
+RUN chmod +x ./*.sh
 
 VOLUME /iso
 VOLUME /target
