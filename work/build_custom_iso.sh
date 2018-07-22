@@ -9,7 +9,7 @@
 
 LABEL="CentOS 7 x86_64"
 # boot menu config needs escaped spaces (replace all spaces by \x20)
-LABEL_CFG="${LABEL// /\\x20/}"
+LABEL_CFG="${LABEL// /\\x20}"
 
 
 ######################################################################
