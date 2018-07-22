@@ -28,14 +28,22 @@ docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -e SOURCE=C
 ```
 
 ## Apply a kickstart file
-To create an installation with a kickstart file you can provide the `ks.cfg` file in the kickstart volume and run the creation with the container like this:
+To create an installation with a kickstart file you can provide the `ks.cfg` file in the custom volume and run the creation with the container like this:
 ```
-docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -v /tmp/kickstart:/kickstart hpgy/centos7-headless-installation
+docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -v /tmp/custom:/custom hpgy/centos7-headless-installation
 ```
-You may specifiy a different kickstart file in the kickstart volume with `KS_CFG`:
+You may specifiy a different kickstart file in the custom volume with `KS_CFG`:
 ```
-docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -v /tmp/kickstart:/kickstart -e KS_CFG=abc-ks.cfg -e SOURCE=CentOS-7-x86_64-Minimal-1804.iso -e TARGET=abc-test.iso hpgy/centos7-headless-installation
+docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -v /tmp/custom:/custom -e KS_CFG=abc-ks.cfg -e SOURCE=CentOS-7-x86_64-Minimal-1804.iso -e TARGET=abc-test.iso hpgy/centos7-headless-installation
 ```
+## Add custom rpm files
+To add additional rpm files to the repository on the installation media you can specify the `RPM_DIR` folder as a folder in the custom volume and run the creation with the container like this:
+```
+docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -v /tmp/custom:/custom -e RPM_DIR=my_rpms -e SOURCE=CentOS-7-x86_64-Minimal-1804.iso hpgy/centos7-headless-installation
+```
+
+You may customize you installation media with a kickstart file and additional rpm files.
+
 ## Result
 You will find the generated iso file(s) in your target folder.
 

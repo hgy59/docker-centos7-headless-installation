@@ -38,13 +38,13 @@ else
 fi
 
 # Optional kickstart file (environment variable)
-# Define default kickstart file /kickstart/ks.cfg
+# Define default kickstart file /custom/ks.cfg
 # or validate the given kickstart file exists
 if [ -z "$KS_CFG" ]; then
     KS_CFG=ks.cfg
 else
-    if [ ! -f /kickstart/$KS_CFG ]; then
-        echo "ERROR: kickstart file /kickstart/$KS_CFG not found!"
+    if [ ! -f /custom/$KS_CFG ]; then
+        echo "ERROR: kickstart file /custom/$KS_CFG not found!"
         exit -2
     fi
 fi
@@ -60,8 +60,18 @@ ORIGINAL_ISO=/work/original
 # for debugging use /target/custom folder and avoid cleanup:
 CUSTOM_ISO=/work/custom
 
-SOURCE_KS_CFG=/kickstart/$KS_CFG
+SOURCE_KS_CFG=/custom/$KS_CFG
 TARGET_KS_CFG=$CUSTOM_ISO/isolinux/ks.cfg
+SOURCE_RPM_DIR=/custom/$RPM_DIR
+TARGET_RPM_DIR=$CUSTOM_ISO/Packages
+
+# if RPM_DIR is specified but not found terminate with error
+if [ ! -z "$RPM_DIR" ]; then
+    if [ ! -d $SOURCE_RPM_DIR ]; then
+        echo "ERROR: rpm folder $SOURCE_RPM_DIR not found!"
+        exit -3
+    fi
+fi
 
 
 
@@ -81,7 +91,7 @@ cp -rf $ORIGINAL_ISO/ $CUSTOM_ISO
 chmod -R u+w $CUSTOM_ISO
 
 
-### optional kickstart file
+### optional: use kickstart file
 KS=""
 if [ -f $SOURCE_KS_CFG ]; then
 	echo ""
@@ -93,6 +103,39 @@ if [ -f $SOURCE_KS_CFG ]; then
     KS="inst.ks=hd:LABEL=$LABEL_CFG:/isolinux/$(basename $TARGET_KS_CFG)"
     echo "    kickstart: $KS"
 fi
+
+
+### optional: add rpm files to repository
+if [ -d $SOURCE_RPM_DIR ]; then
+    echo ""
+	echo "==> add rpm files from $SOURCE_RPM_DIR to repo"
+    rpm_files=0
+    for file in $SOURCE_RPM_DIR/*.rpm; do
+        ((rpm_files++))
+    done
+    if [ $rpm_files == 0 ]; then
+        echo "WARNING: no rpm files found in $RPM_DIR!"
+    else
+        ### Add RPM Files to repository on the installation media ###
+        if [ $rpm_files == 1 ]; then
+            echo "    add $file"
+        else
+            echo "    add $rpm_files rpm files"
+        fi
+        # remove exec attr added by windows os...
+        chmod -x $SOURCE_RPM_DIR/*.rpm
+        # Copy additional RPMs to the directory structure.
+        mkdir -p $TARGET_RPM_DIR
+        cp -n $SOURCE_RPM_DIR/*.rpm $TARGET_RPM_DIR/.
+        # Update repository metadata with added files (keep group definitions)
+        cd $CUSTOM_ISO
+        for file in repodata/*comps.xml; do
+            echo "    update $(basename $file)"
+            createrepo --quiet --update -g $file .
+        done
+    fi
+fi
+
 
 
 ### STEP 4 ###

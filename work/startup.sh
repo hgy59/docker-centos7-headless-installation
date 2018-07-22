@@ -34,7 +34,7 @@ else
         ./build_custom_iso.sh "$isofile"
     done
 
-    if [ count == 0 ]; then
+    if [ $count == 0 ]; then
         echo "ERROR: no iso file found."
         exit -1
     fi
