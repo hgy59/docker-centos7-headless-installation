@@ -3,20 +3,39 @@ Docker image to create custom centos 7 iso files for headless installation
 
 ## Getting Started
 Use the docker image to build iso files from original Centos 7 iso files for installation on headless devices, i.e. use the serial console to install Centos 7.
-You may even use the image on Windows OS.
+Thanks to docker you may create such images on Windows, OSX or linux.
 
 ## Prerequisites
-Download the original iso file.
+Download the original iso file(s).
 
 ## Running
-Provide the folder with the iso file(s) and a folder for the created iso files as volumes.
+Provide the folder with the source iso files and a folder for targets as volumes.
+
 
 ```
-docker run --rm --privileged -v /downloads/iso:/iso -v /headless/target:/target hpgy/centos7-headless-installation
+docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target hpgy/centos7-headless-installation
+```
+Every *.iso file in your iso folder will be converted to a headless installer version in the target folder.
+
+Optionally  specify the name of a single source file located in the iso folder with `SOURCE`:
+```
+docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -e SOURCE=CentOS-7-x86_64-Minimal-1804.iso hpgy/centos7-headless-installation
 ```
 
-Every iso file in your iso folder will be converted to a headless installer version named as *-headless.iso.
+With a specific source file it is possible to specify the name of the target iso file with `TARGET`:
+```
+docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -e SOURCE=CentOS-7-x86_64-Minimal-1804.iso -e TARGET=Centos-1804-headles.iso hpgy/centos7-headless-installation
+```
 
+## Apply a kickstart file
+To create an installation with a kickstart file you can provide the `ks.cfg` file in the kickstart volume and run the creation with the container like this:
+```
+docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -v /tmp/kickstart:/kickstart hpgy/centos7-headless-installation
+```
+You may specifiy a different kickstart file in the kickstart volume with `KS_CFG`:
+```
+docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -v /tmp/kickstart:/kickstart -e KS_CFG=abc-ks.cfg -e SOURCE=CentOS-7-x86_64-Minimal-1804.iso -e TARGET=abc-test.iso hpgy/centos7-headless-installation
+```
 ## Result
 You will find the generated iso file(s) in your target folder.
 
