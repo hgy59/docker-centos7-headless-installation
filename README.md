@@ -1,15 +1,18 @@
 # docker-centos7-headless-installation
-Docker image to create custom centos 7 iso files for headless installation
+Docker image to create custom centos 7 iso files for headless installation.
 
 ## Getting Started
 Use the docker image to build iso files from original Centos 7 iso files for installation on headless devices, i.e. use the serial console to install Centos 7.
 Thanks to docker you may create such images on Windows, OSX or linux.
 
+A headless system does not include a display. Therefore the installer is redirected to the serial console (i.e. ttyS0,115200n8).
+When a network connection is configured you manage the installed system with an ssh client.
+
 ## Prerequisites
 Download the original iso file(s).
 
 ## Running
-Provide the folder with the source iso files and a folder for targets as volumes.
+Provide the folder with the source iso files and a folder for the targets as volumes.
 
 
 ```
@@ -42,7 +45,7 @@ To add additional rpm files to the repository on the installation media you can 
 docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -v /tmp/custom:/custom -e RPM_DIR=my_rpms -e SOURCE=CentOS-7-x86_64-Minimal-1804.iso hpgy/centos7-headless-installation
 ```
 
-You may customize you installation media with a kickstart file and additional rpm files.
+You may customize the installation media with both a kickstart file and additional rpm files.
 
 ## Result
 You will find the generated iso file(s) in your target folder.
