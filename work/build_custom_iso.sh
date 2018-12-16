@@ -4,21 +4,23 @@
 # posted on August 16, 2016 by meetcareygmailcom
 # https://meetcarey.wordpress.com/2016/08/16/first-blog-post/
 # guide is for centos 7.0
-# but works with centos 7.x (validated with 7.4.1708 and 7.5.1804)
+# works with centos 7.x (validated with 7.4.1708, 7.5.1804, 7.6.1810)
 #
 # further resources:
 # https://serverfault.com/questions/517908/how-to-create-a-custom-iso-image-in-centos?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 # 
 # 
-# parameters:
+# script parameters:
 # $1        source iso file (required)
+# $2        target iso file (optional, default: source filename)
 # $KS_CFG   kickstart file (optional)
+# $RPM_DIR  folder with additional rpm files (optional)
 #
 
 
 ### PARAMETERS ###
 
-# Required source iso file (script parameter).
+# Required: source iso file (script parameter).
 if [ -z "$1" ]; then
     echo "ERROR: SOURCE_ISO is not defined!"
     exit -1
@@ -29,7 +31,7 @@ if [ ! -f "$SOURCE_ISO" ]; then
     exit -1
 fi
 
-# Optional target iso file name (script parameter).
+# Optional: target iso file name (script parameter).
 if [ -z "$2" ]; then
     # if target iso is not defined, use the same filename as source
     TARGET_ISO=/target/$(basename "$SOURCE_ISO")
@@ -65,8 +67,8 @@ TARGET_KS_CFG=$CUSTOM_ISO/isolinux/ks.cfg
 SOURCE_RPM_DIR=/custom/$RPM_DIR
 TARGET_RPM_DIR=$CUSTOM_ISO/Packages
 
-# if RPM_DIR is specified but not found terminate with error
-if [ ! -z "$RPM_DIR" ]; then
+# if RPM_DIR is defined but not found terminate with error
+if [ -n "$RPM_DIR" ]; then
     if [ ! -d $SOURCE_RPM_DIR ]; then
         echo "ERROR: rpm folder $SOURCE_RPM_DIR not found!"
         exit -3
@@ -94,27 +96,29 @@ chmod -R u+w $CUSTOM_ISO
 ### optional: use kickstart file
 KS=""
 if [ -f $SOURCE_KS_CFG ]; then
-	echo ""
-	echo "==> configure kickstart"
-	echo "    validate kickstart file $(basename $SOURCE_KS_CFG)"
+    echo ""
+    echo "==> configure kickstart"
+    echo "    validate kickstart file $(basename $SOURCE_KS_CFG)"
     ksvalidator -e $SOURCE_KS_CFG
     
-	cp $SOURCE_KS_CFG $TARGET_KS_CFG
+    cp $SOURCE_KS_CFG $TARGET_KS_CFG
+    # remove exec attr added by docker on windows...
+    chmod -x $TARGET_KS_CFG
     KS="inst.ks=hd:LABEL=$LABEL_CFG:/isolinux/$(basename $TARGET_KS_CFG)"
     echo "    kickstart: $KS"
 fi
 
 
 ### optional: add rpm files to repository
-if [ -d $SOURCE_RPM_DIR ]; then
+if [ -n "$RPM_DIR" ]; then
     echo ""
-	echo "==> add rpm files from $SOURCE_RPM_DIR to repo"
+    echo "==> add rpm files from $SOURCE_RPM_DIR to repository"
     rpm_files=0
     for file in $SOURCE_RPM_DIR/*.rpm; do
         ((rpm_files++))
     done
     if [ $rpm_files == 0 ]; then
-        echo "WARNING: no rpm files found in $RPM_DIR!"
+        echo "WARNING: no rpm files found in $SOURCE_RPM_DIR!"
     else
         ### Add RPM Files to repository on the installation media ###
         if [ $rpm_files == 1 ]; then
@@ -122,11 +126,15 @@ if [ -d $SOURCE_RPM_DIR ]; then
         else
             echo "    add $rpm_files rpm files"
         fi
-        # remove exec attr added by windows os...
-        chmod -x $SOURCE_RPM_DIR/*.rpm
+
         # Copy additional RPMs to the directory structure.
         mkdir -p $TARGET_RPM_DIR
-        cp -n $SOURCE_RPM_DIR/*.rpm $TARGET_RPM_DIR/.
+        for file in $SOURCE_RPM_DIR/*.rpm; do
+            cp -n $file $TARGET_RPM_DIR/$(basename $file)
+            # remove exec attr added by docker on windows...
+            chmod -x $TARGET_RPM_DIR/$(basename $file)
+        done
+
         # Update repository metadata with added files (keep group definitions)
         cd $CUSTOM_ISO
         for file in repodata/*comps.xml; do

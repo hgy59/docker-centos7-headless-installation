@@ -12,7 +12,7 @@ When a network connection is configured you manage the installed system with an 
 Download the original iso file(s).
 
 ## Running
-Provide the folder with the source iso files and a folder for the targets as volumes.
+Provide the folder with the source iso file(s) and a folder for the targets as volumes.
 
 
 ```
@@ -20,12 +20,12 @@ docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target hpgy/centos
 ```
 Every *.iso file in your iso folder will be converted to a headless installer version in the target folder.
 
-Optionally  specify the name of a single source file located in the iso folder with `SOURCE`:
+Optionally specify the name of a single source file located in the iso folder with `SOURCE`:
 ```
 docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -e SOURCE=CentOS-7-x86_64-Minimal-1804.iso hpgy/centos7-headless-installation
 ```
 
-With a specific source file it is possible to specify the name of the target iso file with `TARGET`:
+With a specific source file it is provided to specify a name for the target iso file with `TARGET`:
 ```
 docker run --rm --privileged -v /tmp/iso:/iso -v /tmp/target:/target -e SOURCE=CentOS-7-x86_64-Minimal-1804.iso -e TARGET=Centos-1804-headles.iso hpgy/centos7-headless-installation
 ```
